@@ -7,6 +7,25 @@ påhittade utbildningsföretaget **Nordkod**.
 > hur man kör projektet, vem som gjorde vad, och vilka tekniker som används.
 > Det som står nedan är bara det som behövs för att komma igång.
 
+## Status
+
+Steg 0 är klart: skelett, mallar, tokens och stubbar ligger på plats.
+Nästa steg är kickoffen och besluten K1–K4 i arbetsplanen.
+
+## Designen
+
+| | Länk |
+|---|---|
+| **Designriktningar** – fem förslag, var och en i 1440, 768 och 390. Börja på sidan *Start här* | [Figma](https://www.figma.com/design/5fB1ucR6IIVb2L0zjoBJtO/Nordkod-%E2%80%93-designriktningar?node-id=0-1) |
+| **Flöde och struktur** – användarens väg genom sajten, och rollfördelningen | [FigJam](https://www.figma.com/board/loIXYG4nLXtV0o6mEMFXik/Nordkod-%E2%80%93-fl%C3%B6de-och-struktur) |
+
+Designfilen innehåller också sidan *Layout – struktur* med gråskaleskelett för
+tre layouter i tre brytpunkter, och *Logotyp – idéer*.
+
+Färgvärdena ur den riktning ni röstar fram finns färdiga i
+[`docs/paletter.md`](docs/paletter.md) – kopiera rätt block in i
+`css/tokens.css`.
+
 ## Kör projektet
 
 `fetch` fungerar inte om man öppnar `index.html` genom att dubbelklicka –
@@ -37,7 +56,3 @@ Ska ett kort se annorlunda ut ändras mallen i HTML.
 
 **Data innehåller aldrig formaterad text.** `2026-04-13`, inte `13 apr 2026`.
 
-## Status
-
-Steg 0 är klart: skelett, mallar, tokens och stubbar ligger på plats.
-Nästa steg är kickoffen och besluten K1–K4 i arbetsplanen.

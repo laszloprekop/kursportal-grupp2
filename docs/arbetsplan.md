@@ -11,6 +11,21 @@ ordning de måste göras. Fyra spår löper parallellt. Markörerna betyder:
 
 ---
 
+## Var designen finns
+
+| | Länk |
+|---|---|
+| Fem designriktningar, var och en i 1440, 768 och 390. Börja på *Start här* | [Figma – designriktningar](https://www.figma.com/design/5fB1ucR6IIVb2L0zjoBJtO/Nordkod-%E2%80%93-designriktningar?node-id=0-1) |
+| Flödet genom sajten och rollfördelningen | [FigJam – flöde och struktur](https://www.figma.com/board/loIXYG4nLXtV0o6mEMFXik/Nordkod-%E2%80%93-fl%C3%B6de-och-struktur) |
+
+I designfilen finns också sidan *Layout – struktur*: tre skelett i gråskala,
+var och en i tre brytpunkter. Den säger vad som ska hända vid 768 – att
+kortrutnätet går från fyra till två kolumner, att filtret flyttar upp, att
+modulraderna tappar sin portkolumn. Titta där innan ni bygger brytpunkterna,
+så slipper ni fatta samma beslut tre gånger.
+
+---
+
 ## Det som redan är bestämt
 
 Fem beslut är fattade och skrivna. Ifrågasätt dem gärna på kickoffen, men gör
@@ -34,7 +49,7 @@ veckan.
 
 | # | Fråga | Blockerar | Förslag |
 |---|---|---|---|
-| K1 | Vilken designriktning? | Laszlos färger och typografi | Rösta. Slå inte ihop två. |
+| K1 | Vilken designriktning? | Laszlos färger och typografi | Rösta utifrån sidan *Start här* i Figma. Slå inte ihop två – det ger alltid ett urvattnat resultat. |
 | K2 | Filter: ett val i taget eller flera samtidigt? | Marcus filter, Laszlos filter-UI | Flerval inom en grupp, `ELLER` inom gruppen och `OCH` mellan grupperna |
 | K3 | GSAP eller ren CSS för kursvyn? | Marcus animation | CSS. En `transform` och en `transition` räcker. GSAP om det krånglar |
 | K4 | Grenstrategi | Alla | `main` + en gren per uppgift. Ingen pushar direkt till `main` |

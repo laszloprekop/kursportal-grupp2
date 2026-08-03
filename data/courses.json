@@ -1,0 +1,105 @@
+[
+  {
+    "id": "test-och-kartlaggning",
+    "title": "Test och kartläggning",
+    "summary": "Två veckor där vi kartlägger dina förkunskaper och lägger upp din studieplan.",
+    "description": [
+      "Utbildningen inleds med två veckors test och kartläggning. Du får visa vad du redan kan inom programmering, och tillsammans med en handledare lägger ni upp en studieplan för resten av programmet.",
+      "Perioden är obligatorisk för alla deltagare och avgör inte om du får gå vidare – den avgör hur din väg genom programmet ser ut."
+    ],
+    "provider": "Lexicon",
+    "category": "Introduktion",
+    "level": "Alla",
+    "startDate": "2026-04-13",
+    "endDate": "2026-04-24",
+    "duration": { "value": 2, "unit": "veckor" },
+    "price": 0,
+    "program": true
+  },
+  {
+    "id": "it-pabyggnad-mot-fullstack",
+    "title": "IT-påbyggnad mot fullstack",
+    "summary": "Arton veckor med webbutveckling, versionshantering och arbetssätt i team.",
+    "description": [
+      "Programmets tyngsta del. Du bygger webbapplikationer från grunden: semantisk HTML, CSS med Flexbox och Grid, JavaScript och TypeScript, och de verktyg som används i verkliga projekt.",
+      "Undervisningen varvar genomgångar med eget arbete och grupparbeten. Du arbetar i Git från första veckan.",
+      "Delen ges av Lexicon och löper över sommaren med ett uppehåll i juli."
+    ],
+    "provider": "Lexicon",
+    "category": "Fullstack",
+    "level": "Påbyggnad",
+    "startDate": "2026-04-27",
+    "endDate": "2026-09-16",
+    "duration": { "value": 18, "unit": "veckor" },
+    "price": 0,
+    "program": true
+  },
+  {
+    "id": "teoristudier-ltu",
+    "title": "Teoristudier",
+    "summary": "Tjugoen veckor vid Luleå tekniska universitet med fördjupning i systemutveckling.",
+    "description": [
+      "Den akademiska delen av programmet, som ges av Luleå tekniska universitet. Här flyttas fokus från hantverket till principerna bakom: datastrukturer, systemdesign, databaser och metodik.",
+      "Studierna sker på distans med schemalagda träffar. Perioden löper genom vintern, från september till februari."
+    ],
+    "provider": "Luleå tekniska universitet",
+    "category": "Fullstack",
+    "level": "Påbyggnad",
+    "startDate": "2026-09-17",
+    "endDate": "2027-02-17",
+    "duration": { "value": 21, "unit": "veckor" },
+    "price": 0,
+    "program": true
+  },
+  {
+    "id": "arbetsplatsforlagt-larande",
+    "title": "Arbetsplatsförlagt lärande",
+    "summary": "Tjugonio dagar hos ett företag i Norrbotten eller Västerbotten.",
+    "description": [
+      "Programmet avslutas med praktik. Du arbetar hos ett företag i regionen och tar med dig det du lärt dig in i ett riktigt utvecklingsteam.",
+      "Platserna förmedlas av utbildningsanordnaren. Flera deltagare har fått anställning direkt efter perioden."
+    ],
+    "provider": "Praktikplats",
+    "category": "Praktik",
+    "level": "Påbyggnad",
+    "startDate": "2027-02-18",
+    "endDate": "2027-03-18",
+    "duration": { "value": 29, "unit": "dagar" },
+    "price": 0,
+    "program": true
+  },
+  {
+    "id": "responsiv-design-med-css",
+    "title": "Responsiv design med CSS",
+    "summary": "Sex veckor om layout som håller från 390 till 1440 pixlar.",
+    "description": [
+      "En kurs för dig som kan HTML men vill bli säker på layout. Vi arbetar med Flexbox, Grid, brytpunkter och relativa enheter, och du bygger om samma sida för tre skärmstorlekar.",
+      "Kursen ges på kvällstid och kräver inga förkunskaper i JavaScript."
+    ],
+    "provider": "Nordkod",
+    "category": "Frontend",
+    "level": "Nybörjare",
+    "startDate": "2026-09-07",
+    "endDate": "2026-10-16",
+    "duration": { "value": 6, "unit": "veckor" },
+    "price": 9900,
+    "program": false
+  },
+  {
+    "id": "javascript-for-webb",
+    "title": "JavaScript för webb",
+    "summary": "Åtta veckor om att hämta data, hantera händelser och bygga interaktion.",
+    "description": [
+      "Du lär dig arbeta med DOM:en, lyssna på händelser och hämta data med fetch och async/await. Kursen avslutas med ett eget projekt där du bygger en sida som läser sitt innehåll från ett API.",
+      "Förkunskaper: HTML och CSS på grundnivå."
+    ],
+    "provider": "Nordkod",
+    "category": "Frontend",
+    "level": "Fortsättning",
+    "startDate": "2026-10-05",
+    "endDate": "2026-11-27",
+    "duration": { "value": 8, "unit": "veckor" },
+    "price": 12900,
+    "program": false
+  }
+]

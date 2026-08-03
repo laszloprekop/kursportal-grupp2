@@ -51,7 +51,7 @@ veckan.
 |---|---|---|---|
 | K1 | Vilken designriktning? | Laszlos färger och typografi | Rösta utifrån sidan *Start här* i Figma. Slå inte ihop två – det ger alltid ett urvattnat resultat. |
 | K2 | Filter: ett val i taget eller flera samtidigt? | Marcus filter, Laszlos filter-UI | Flerval inom en grupp, `ELLER` inom gruppen och `OCH` mellan grupperna |
-| K3 | GSAP eller ren CSS för kursvyn? | Marcus animation | CSS. En `transform` och en `transition` räcker. GSAP om det krånglar |
+| K3 | Vill vi ha mer rörelse än kursvyns inglidning? | Ingen – helt valfritt | Kursvyn görs med ren CSS. Allt därutöver är ett extraspår, se längst ned |
 | K4 | Grenstrategi | Alla | `main` + en gren per uppgift. Ingen pushar direkt till `main` |
 
 ⚠️ **K1 är det enda som verkligen blockerar, och bara färg och typografi.**
@@ -62,19 +62,40 @@ byta, en dag att vänta.
 
 ---
 
-## Steg 0 – Walking skeleton (Laszlo)
+## Steg 0 – Walking skeleton ✔ KLART
 
-Ligger klart i repot när ni kommer på tisdag morgon.
+**Det här är redan gjort och ligger i det tillfälliga repot:**
+<https://github.com/laszloprekop/kursportal-grupp2>
 
-| | Vad | Klart när |
+Klona det, öppna det, kör det. Sidorna laddar. Meningen är att ni ska ha
+något konkret att titta på under kickoffen i stället för en plan i luften.
+
+| | Vad | Status |
 |---|---|---|
-| 0.1 | Mappstruktur enligt `docs/filstruktur.md` | Mapparna finns |
-| 0.2 | `index.html` med alla sektioner, rätt element, rätt rubriknivåer, inga klasser | Sidan går att öppna och läsa uppifrån och ned |
-| 0.3 | `<template id="kurskort-mall">` med de åtta `data-falt`-krokarna | Kontraktet syns i koden |
-| 0.4 | `css/tokens.css` med variabelnamn och platshållarvärden | Namnen finns, värdena kan bytas |
-| 0.5 | `tailwind.config`-blocket som pekar på tokens | Tailwind bygger utan fel |
-| 0.6 | `bootstrap-jamforelse.html` – tom stomme | Filen finns |
-| 0.7 | `data/courses.json` med 6 kurser | Klart sedan tidigare |
+| 0.1 | Mappstruktur enligt `docs/filstruktur.md` | ✔ |
+| 0.2 | `index.html` med alla sektioner, rätt element, rätt rubriknivåer, inga klasser | ✔ |
+| 0.3 | `<template id="kurskort-mall">` med de åtta `data-falt`-krokarna | ✔ |
+| 0.4 | `css/tokens.css` med bestämda namn och platshållarvärden | ✔ |
+| 0.5 | `tailwind.config`-blocket som pekar på tokens | ✔ |
+| 0.6 | `bootstrap-jamforelse.html` med egen mall, ingen Tailwind | ✔ |
+| 0.7 | `data/courses.json` med 6 kurser | ✔ |
+| 0.8 | Stubbar i `js/` med ägarskap, kontrakt och fallgropar i kommentarer | ✔ |
+
+### Peter – det här är ett utkast, inte ett facit
+
+Repot är **tillfälligt** och ligger på Laszlos konto. Det är en startpunkt att
+granska, ändra och flytta – inte något som är bestämt över era huvuden.
+
+Du bestämmer:
+
+- om innehållet ska flyttas till ett repo under din användare eller under en
+  organisation för gruppen
+- grennamn, grenstrategi och vem som får merga
+- om något i strukturen ska se annorlunda ut
+
+Allt går att ändra. Det som vore synd att kasta är de fyra ADR:erna och
+dataformen, eftersom de är sömmarna som gör att fyra personer kan arbeta
+samtidigt. Strukturen i övrigt är bara ett förslag.
 
 ⚠️ **Konfigurationsblocket måste ligga *efter* CDN-skriptet**, inte före.
 `<script src="https://cdn.tailwindcss.com"></script>` först, sedan
@@ -84,9 +105,10 @@ Ligger klart i repot när ni kommer på tisdag morgon.
 
 ## Kickoff – tisdag morgon, 30 minuter
 
-1. Gå igenom de fem besluten ovan (10 min)
-2. Bestäm K1–K4 (15 min)
-3. Peter skapar repot, alla klonar (5 min)
+1. Titta på steg 0 tillsammans – det finns redan att köra (5 min)
+2. Gå igenom de fem besluten ovan (10 min)
+3. Bestäm K1–K4 (15 min)
+4. Peter bestämmer var koden ska bo och alla klonar (5 min)
 
 Efter mötet ska ingen behöva fråga vad de ska göra.
 
@@ -96,7 +118,7 @@ Efter mötet ska ingen behöva fråga vad de ska göra.
 
 | # | Uppgift | Beroende | Klart när |
 |---|---|---|---|
-| P1 | Skapa repot på GitHub, bjud in alla tre, pusha Laszlos steg 0 | – | Alla har klonat |
+| P1 | Bestäm var koden ska bo: behåll det tillfälliga repot eller flytta innehållet till ett eget. Bjud in alla tre | Steg 0 finns ✔ | Alla har klonat |
 | P2 | `.gitignore`, grenstrategi enligt K4, skydda `main` | P1 | Ingen kan pusha till `main` |
 | P3 | Fyll `data/courses.json` till ~10 kurser | `docs/kursdata.md` | JSON validerar, alla fält enligt kontraktet |
 | P4 | Löpande: slå ihop grenar, lösa konflikter | – | Dagligen, helst två gånger om dagen |
@@ -116,7 +138,7 @@ vanligaste miss som förstör sorteringen.
 
 | # | Uppgift | Beroende | Klart när |
 |---|---|---|---|
-| L1 | Pusha steg 0 | P1 | Ligger i `main` |
+| L1 | Steg 0 – klart, ligger i det tillfälliga repot | – | ✔ |
 | L2 | Fyll `tokens.css` med den vinnande riktningens värden | 🔒 K1 | Färgerna stämmer med Figma |
 | L3 | Layout desktop: nav, hero, kurslista-grid, nyheter, footer | L1 | Sidan har rätt struktur på 1440 |
 | L4 | Kurskortsmallen färdig med alla klasser | L3 | Ett kort ser rätt ut när det klonas |
@@ -239,6 +261,37 @@ Laszlo och båda bör vara klara senast onsdag lunch.
 | **Mån 10** | sista genomgång före 17:00 | | | **P6** |
 
 Fyra arbetsdagar. Inte sju.
+
+---
+
+## Animation – ett valfritt extraspår (Marcus)
+
+Kursvyns inglidning behöver ingen hjälp: en `transform` och en `transition`
+räcker, och det är så M5 ska byggas. Ingen väntar på det här spåret och inget
+i uppgiften kräver det.
+
+Men om du vill leka finns det utrymme – hero-ytan, kortens hovring, filtrets
+omritning, signaturelementet. Uppgiften bedömer fetch, filter och validering,
+så gör det här **efter** M1–M6, inte i stället för.
+
+| Verktyg | Vad det är bra på | Var det skulle passa |
+|---|---|---|
+| **GSAP** | Tidslinjer: flera saker som ska hända i en bestämd ordning med olika easing | Hero-sekvens vid sidladdning – rubrik, ingress, knappar, signaturelement in efter varandra |
+| **Lottie** | Färdiga vektoranimationer exporterade från After Effects eller LottieFiles | En liten illustration i hero, eller ett kvitto när kontaktformuläret skickats |
+| **Motion One** | GSAP-liknande API, men bygger på webbläsarens egna Web Animations. Några få kilobyte | Om du vill ha tidslinjer utan att lägga till ett stort bibliotek |
+| **View Transitions API** | Inbyggt i webbläsaren, ingen fil att ladda | Övergången mellan huvudvy och kursvy – ett modernare alternativ till vår egen `transform` |
+| **Ren CSS** | `@keyframes`, `transition`, `scroll-driven animations` | Allt som bara har två lägen. Räcker oftare än man tror |
+
+Tre regler oavsett vad du väljer:
+
+1. **`prefers-reduced-motion` gäller allt.** Regeln finns redan i
+   `css/tokens.css` – bygg inget som kringgår den.
+2. **Ingen animation får ligga mellan användaren och innehållet.** En kurs ska
+   gå att öppna även om biblioteket inte laddar.
+3. **Ett bibliotek, inte tre.** Väljer du GSAP är det GSAP. Två
+   animationsbibliotek på en skoluppgift är svårare att försvara än noll.
+
+Lägg det på en egen gren. Blir det inte klart är det inget som saknas.
 
 ---
 

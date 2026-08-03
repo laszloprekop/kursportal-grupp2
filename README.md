@@ -9,8 +9,17 @@ påhittade utbildningsföretaget **Nordkod**.
 
 ## Status
 
-Steg 0 är klart: skelett, mallar, tokens och stubbar ligger på plats.
-Nästa steg är kickoffen och besluten K1–K4 i arbetsplanen.
+**Det här är ett tillfälligt repo på Laszlos konto, gjort inför kickoffen.**
+Steg 0 är redan byggt: skelett, mallar, tokens, stubbar och dokumentation.
+Klona, kör, titta.
+
+Peter bestämmer var koden ska bo på riktigt – behåll det här eller flytta
+innehållet. Allt går att ändra. Det som är värt att behålla är de fyra
+ADR:erna och dataformen, eftersom de är sömmarna som gör att fyra personer
+kan arbeta samtidigt.
+
+Nästa steg är kickoffen och besluten K1–K4 i
+[arbetsplanen](docs/arbetsplan.md).
 
 ## Designen
 

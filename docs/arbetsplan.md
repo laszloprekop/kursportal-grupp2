@@ -217,35 +217,48 @@ fil, och hela ADR 0003 faller.
 
 ## Vad som är beroende av vad
 
+Fyra spår, alla fyra igång från tisdag förmiddag.
+
 ```
-                  KICKOFF (K1–K4)
-                        │
-        ┌───────────────┼───────────────┬──────────────┐
-        │               │               │              │
-      Peter          Laszlo          Bahador        Marcus
-      P1 repo        L1 pusha        B1 head        M1 fetch
-        │               │               │              │
-      P3 data        L3 layout       B2 formulär    M2 format
-        │               │               │              │
-        │            L4 mall ─────────────────────▶ M3 rendera
-        │               │                              │
-        │            L5 kursvy ───────────────────▶ M5 kursvy
-        │               │                              │
-        │            L2 tokens 🔒K1                 M4 filter 🔒K2
-        │               │                              │
-        │            L6 brytpunkter                 M6 validering ◀── B2
-        │               │                              │
-        │            L7 styling                     B4 tangentbord ◀── L5+M5
-        │               │
-        │            L8 Bootstrap-sidan
-        │               │
-      P4 merge ◀────────┴──────────────┴──────────────┘
-        │
-      P5 README → P6 inlämning
+                        KICKOFF  ·  K1–K4
+                               │
+   ┌───────────────────┬───────┴───────────┬───────────────────┐
+   │                   │                   │                   │
+ PETER               LASZLO              BAHADOR             MARCUS
+   │                   │                   │                   │
+ P1 var koden bor    L1 steg 0 klart     B1 head + SEO       M1 fetch
+ P2 grenskydd        L3 layout           B2 formulär         M2 formatering
+ P3 kursdata         L4 mall             B3 granskning       M3 rendera
+                     L5 kursvy           B4 tangentbord      M4 filter
+                     L2 tokens           B5 rapport          M5 kursvy
+                     L6 brytpunkter                          M6 validering
+                     L7 styling
+                     L8 bootstrap-sidan
+                     L9 jämförelsetext
+   │                   │                   │                   │
+   └───────────────────┴─────────┬─────────┴───────────────────┘
+                                 │
+                        P4 merge, löpande
+                                 │
+                      P5 README  →  P6 inlämning
 ```
+
+### Korsberoenden – de enda ställena där någon väntar på någon annan
+
+| Väntar | På | Varför |
+|---|---|---|
+| M3 rendera | **L4 mall** | Renderaren behöver mallen att klona. Kontraktet räcker för att börja koda |
+| M5 kursvy | **L5 kursvy** | Panelen måste finnas innan den kan fyllas och animeras |
+| M6 validering | **B2 formulär** | Valideringen skrivs mot Bahadors fältnamn och felmeddelanden |
+| B4 tangentbord | **L5 + M5** | Går inte att testa fokusordningen innan vyn öppnas och stängs |
+| L2 tokens | **K1** | Färgvärdena kommer ur den vinnande riktningen |
+| M4 filter | **K2** | Enkelval eller flerval avgör både logiken och knapparnas utseende |
 
 Den enda riktiga flaskhalsen är **L4 → M3** och **L5 → M5**. Båda ligger på
 Laszlo och båda bör vara klara senast onsdag lunch.
+
+**B3 löper genom hela veckan** och väntar inte på någon – Bahador granskar det
+som finns, varje dag, i stället för att spara ihop en lista till fredag.
 
 ---
 

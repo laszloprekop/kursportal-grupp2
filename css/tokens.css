@@ -1,0 +1,66 @@
+/* Designtokens.
+   Namnen är bestämda och ändras inte. Värdena nedan är platshållare i gråskala
+   och byts mot den vinnande riktningens värden efter omröstningen (K1).
+   Färdiga block för alla fem riktningar finns i docs/paletter.md.
+
+   Delas av index.html och bootstrap-jamforelse.html, så att jämförelsen
+   gäller ramverken och inte designen. */
+
+:root {
+  /* Ytor – från sidans botten till det som ligger överst */
+  --nk-yta-1: #ffffff;   /* sidans bakgrund */
+  --nk-yta-2: #f2f3f5;   /* kort, paneler, upphöjda ytor */
+  --nk-yta-3: #1c1f24;   /* mörkt band: sidfot eller inverterad sektion */
+
+  /* Text */
+  --nk-text-1: #16181c;  /* brödtext och rubriker */
+  --nk-text-2: #666d76;  /* dämpad text, etiketter, metadata */
+  --nk-text-pa-accent: #ffffff;  /* text ovanpå accentfärgen */
+  --nk-text-pa-yta-3: #e8eaed;   /* text ovanpå det mörka bandet */
+
+  /* Accenter – två, inte fler */
+  --nk-accent: #12508f;
+  --nk-accent-2: #8a939d;
+
+  /* Linjer */
+  --nk-linje: #e0e3e7;   /* hårfina avdelare */
+
+  /* Fokus – egen token, aldrig samma som accenten.
+     Fokusmarkeringen måste synas även ovanpå accentfärgade knappar. */
+  --nk-fokus: #0a58ca;
+
+  /* Typsnitt */
+  --nk-typ-display: system-ui, sans-serif;
+  --nk-typ-brod: system-ui, sans-serif;
+  --nk-typ-data: ui-monospace, monospace;
+
+  /* Form */
+  --nk-radie-liten: 4px;
+  --nk-radie-stor: 12px;
+
+  /* Rörelse */
+  --nk-tid-snabb: 160ms;
+  --nk-tid-lugn: 420ms;
+  --nk-ease: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Alla animationer stängs av för den som bett om mindre rörelse.
+   Gäller kursvyns inglidning. Krav, inte artighet. */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --nk-tid-snabb: 0ms;
+    --nk-tid-lugn: 0ms;
+  }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Fokusmarkering – synlig, alltid. Bahador äger den (B3). */
+:focus-visible {
+  outline: 3px solid var(--nk-fokus);
+  outline-offset: 2px;
+}

@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- ===== ÄGS AV BAHADOR (B1) ============================================
+       title, description, Open Graph, favicon, Google Fonts.
+       Värdena nedan är platshållare så att sidan går att öppna.
+       ===================================================================== -->
+  <title>Nordkod – kursportal</title>
+  <meta name="description" content="Nordkod erbjuder kurser i webbutveckling i norra Sverige. Elva månader från påbyggnadskurs till arbetsplats.">
+
+  <link rel="stylesheet" href="css/tokens.css">
+
+  <!-- Tailwind via CDN, som i kursens övningar.
+       FALLGROP: konfigurationen måste ligga EFTER skriptet, inte före. -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            yta:    { 1: 'var(--nk-yta-1)', 2: 'var(--nk-yta-2)', 3: 'var(--nk-yta-3)' },
+            text:   { 1: 'var(--nk-text-1)', 2: 'var(--nk-text-2)',
+                      accent: 'var(--nk-text-pa-accent)', mork: 'var(--nk-text-pa-yta-3)' },
+            accent: { DEFAULT: 'var(--nk-accent)', 2: 'var(--nk-accent-2)' },
+            linje:  'var(--nk-linje)'
+          },
+          fontFamily: {
+            display: 'var(--nk-typ-display)',
+            brod:    'var(--nk-typ-brod)',
+            data:    'var(--nk-typ-data)'
+          },
+          borderRadius: { liten: 'var(--nk-radie-liten)', stor: 'var(--nk-radie-stor)' },
+          screens: { md: '768px', lg: '1200px' }
+        }
+      }
+    }
+  </script>
+</head>
+
+<body>
+  <a href="#huvudinnehall">Hoppa till innehållet</a>
+
+  <header>
+    <nav aria-label="Huvudmeny">
+      <a href="#huvudinnehall">Nordkod</a>
+      <ul>
+        <li><a href="#kurser">Kurser</a></li>
+        <li><a href="#nyheter">Nyheter</a></li>
+        <li><a href="#kontakt">Kontakt</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <!-- Huvudvyn. Skjuts ut åt vänster när en kursvy öppnas. Se ADR 0001. -->
+  <main id="huvudinnehall">
+
+    <section aria-labelledby="hero-rubrik">
+      <p>Arbetsmarknadsutbildning · Norrbotten</p>
+      <h1 id="hero-rubrik">Bli fullstackutvecklare i norra Sverige</h1>
+      <p>Elva månader från påbyggnadskurs till arbetsplats. Du läser hos Lexicon och
+         Luleå tekniska universitet, och avslutar med praktik hos ett företag i norr.</p>
+      <a href="#kurser">Se kurser</a>
+      <a href="#kontakt">Kontakta oss</a>
+      <!-- SIGNATURELEMENT (L7) placeras här -->
+    </section>
+
+    <section id="kurser" aria-labelledby="kurser-rubrik">
+      <h2 id="kurser-rubrik">Kurser i programmet</h2>
+
+      <!-- Filtret. Värdena måste stämma exakt med data/courses.json.
+           Fasta listor enligt docs/kursdata.md – ingen fri text. -->
+      <form id="filter" aria-label="Filtrera kurser">
+        <fieldset>
+          <legend>Anordnare</legend>
+          <label><input type="checkbox" name="provider" value="Lexicon"> Lexicon</label>
+          <label><input type="checkbox" name="provider" value="Luleå tekniska universitet"> Luleå tekniska universitet</label>
+          <label><input type="checkbox" name="provider" value="Praktikplats"> Praktikplats</label>
+          <label><input type="checkbox" name="provider" value="Nordkod"> Nordkod</label>
+        </fieldset>
+        <fieldset>
+          <legend>Nivå</legend>
+          <label><input type="checkbox" name="level" value="Alla"> Alla</label>
+          <label><input type="checkbox" name="level" value="Nybörjare"> Nybörjare</label>
+          <label><input type="checkbox" name="level" value="Fortsättning"> Fortsättning</label>
+          <label><input type="checkbox" name="level" value="Påbyggnad"> Påbyggnad</label>
+        </fieldset>
+        <button type="reset">Rensa filter</button>
+      </form>
+
+      <!-- Korten läggs in här av js/kortlista.js -->
+      <ul id="kurslista" aria-live="polite"></ul>
+      <p id="kurslista-tom" hidden>Inga kurser matchar filtret.</p>
+    </section>
+
+    <section id="nyheter" aria-labelledby="nyheter-rubrik">
+      <h2 id="nyheter-rubrik">Nyheter</h2>
+      <ul id="nyhetslista"></ul>
+    </section>
+
+    <!-- ===== ÄGS AV BAHADOR (B2) ==========================================
+         Hela formuläret: label-koppling, required, aria-describedby,
+         felmeddelandenas element och texter, tabbordning.
+         Marcus validerar mot det som står här (M6).
+         =================================================================== -->
+    <section id="kontakt" aria-labelledby="kontakt-rubrik">
+      <h2 id="kontakt-rubrik">Kontakta oss</h2>
+      <form id="kontaktformular" novalidate>
+        <p>
+          <label for="namn">Namn</label>
+          <input type="text" id="namn" name="namn" required aria-describedby="namn-fel">
+          <span id="namn-fel" role="alert"></span>
+        </p>
+        <p>
+          <label for="epost">E-postadress</label>
+          <input type="email" id="epost" name="epost" required aria-describedby="epost-fel">
+          <span id="epost-fel" role="alert"></span>
+        </p>
+        <p>
+          <label for="meddelande">Meddelande</label>
+          <textarea id="meddelande" name="meddelande" rows="5" required aria-describedby="meddelande-fel"></textarea>
+          <span id="meddelande-fel" role="alert"></span>
+        </p>
+        <button type="submit">Skicka meddelande</button>
+        <p id="formular-kvitto" role="status"></p>
+      </form>
+    </section>
+
+  </main>
+
+  <!-- ===== KURSVYN =======================================================
+       Eget lager över hela fönstret. Ligger UTANFÖR <main> och är dold tills
+       en kurs öppnas. Se ADR 0001.
+       FALLGROP: den får aldrig ligga sida vid sida med huvudvyn i en flexrad.
+       Marcus (M5) fyller innehållet och sköter history. Bahador (B4) äger
+       fokushanteringen.
+       ==================================================================== -->
+  <section id="kursvy" aria-labelledby="kursvy-rubrik" hidden>
+    <button type="button" id="kursvy-tillbaka">Tillbaka till kurserna</button>
+    <article>
+      <p data-falt="provider"></p>
+      <h2 id="kursvy-rubrik" data-falt="title"></h2>
+      <p data-falt="summary"></p>
+      <dl>
+        <dt>Längd</dt>   <dd data-falt="duration"></dd>
+        <dt>Start</dt>   <dd data-falt="startDate"></dd>
+        <dt>Slut</dt>    <dd data-falt="endDate"></dd>
+        <dt>Nivå</dt>    <dd data-falt="level"></dd>
+        <dt>Avgift</dt>  <dd data-falt="price"></dd>
+      </dl>
+      <div data-falt="description"></div>
+    </article>
+  </section>
+
+  <footer>
+    <p>Nordkod</p>
+    <ul>
+      <li><a href="#kurser">Kurser</a></li>
+      <li><a href="#nyheter">Nyheter</a></li>
+      <li><a href="#kontakt">Kontakt</a></li>
+    </ul>
+    <p>Utbildningen ges i samarbete med Lexicon, Arbetsförmedlingen och Luleå tekniska universitet.</p>
+    <p><small>Studentprojekt – Lexicon frontendkurs 2026. Nordkod är ett påhittat namn.</small></p>
+  </footer>
+
+  <!-- ===== MALLAR ========================================================
+       Kontraktet mellan Laszlo och Marcus. Se ADR 0002.
+       Reglerna: JavaScript fyller [data-falt] och skriver aldrig klassnamn.
+       En mall får utelämna en krok den inte använder – renderaren måste tåla
+       att den saknas.
+       ==================================================================== -->
+  <template id="kurskort-mall">
+    <li>
+      <article data-kurs-id>
+        <p data-falt="provider"></p>
+        <h3 data-falt="title"></h3>
+        <p data-falt="summary"></p>
+        <dl>
+          <dt>Längd</dt>  <dd data-falt="duration"></dd>
+          <dt>Start</dt>  <dd data-falt="startDate"></dd>
+          <dt>Nivå</dt>   <dd data-falt="level"></dd>
+          <dt>Avgift</dt> <dd data-falt="price"></dd>
+        </dl>
+        <a data-falt="lank" href="#">Läs mer</a>
+      </article>
+    </li>
+  </template>
+
+  <template id="nyhetskort-mall">
+    <li>
+      <article>
+        <p data-falt="datum"></p>
+        <h3 data-falt="rubrik"></h3>
+        <p data-falt="text"></p>
+      </article>
+    </li>
+  </template>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

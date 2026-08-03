@@ -217,31 +217,55 @@ fil, och hela ADR 0003 faller.
 
 ## Vad som är beroende av vad
 
-Fyra spår, alla fyra igång från tisdag förmiddag.
+Fyra spår, alla fyra igång från tisdag förmiddag. Rött är flaskhals.
 
+```mermaid
+gantt
+  title Kursportalen – tisdag 4 aug till inlämning måndag 10 aug
+  dateFormat YYYY-MM-DD
+  axisFormat %a %-d/%-m
+  excludes weekends
+
+  section Peter
+  P1 Var koden bor       :p1, 2026-08-04, 1d
+  P2 Grenskydd           :p2, 2026-08-04, 1d
+  P3 Kursdata till 10    :p3, 2026-08-04, 1d
+  P4 Merge, löpande      :p4, 2026-08-04, 4d
+  P5 README              :p5, 2026-08-07, 1d
+  P6 Inlämning           :milestone, inl, 2026-08-10, 0d
+
+  section Laszlo
+  L1 Steg 0              :done, l1, 2026-08-03, 1d
+  L3 Layout desktop      :l3, 2026-08-04, 2d
+  L4 Kurskortsmall       :crit, l4, 2026-08-05, 1d
+  L5 Kursvyns skal       :crit, l5, 2026-08-05, 1d
+  L2 Tokens              :l2, 2026-08-06, 1d
+  L6 Brytpunkter         :l6, 2026-08-06, 1d
+  L7 Styling             :l7, 2026-08-07, 1d
+  L8 Bootstrap-sidan     :l8, 2026-08-07, 1d
+  L9 Jämförelsetext      :l9, 2026-08-07, 1d
+
+  section Bahador
+  B1 Head och SEO        :b1, 2026-08-04, 1d
+  B2 Formulär            :b2, 2026-08-04, 2d
+  B3 Granskning, löpande :b3, 2026-08-04, 4d
+  B4 Tangentbord         :b4, 2026-08-07, 1d
+  B5 Rapport             :b5, 2026-08-07, 1d
+
+  section Marcus
+  M1 Fetch               :m1, 2026-08-04, 1d
+  M2 Formatering         :m2, 2026-08-04, 1d
+  M4 Filter              :m4, 2026-08-05, 1d
+  M3 Rendera             :m3, after l4, 1d
+  M5 Kursvy              :m5, after l5, 1d
+  M6 Validering          :m6, 2026-08-07, 1d
 ```
-                        KICKOFF  ·  K1–K4
-                               │
-   ┌───────────────────┬───────┴───────────┬───────────────────┐
-   │                   │                   │                   │
- PETER               LASZLO              BAHADOR             MARCUS
-   │                   │                   │                   │
- P1 var koden bor    L1 steg 0 klart     B1 head + SEO       M1 fetch
- P2 grenskydd        L3 layout           B2 formulär         M2 formatering
- P3 kursdata         L4 mall             B3 granskning       M3 rendera
-                     L5 kursvy           B4 tangentbord      M4 filter
-                     L2 tokens           B5 rapport          M5 kursvy
-                     L6 brytpunkter                          M6 validering
-                     L7 styling
-                     L8 bootstrap-sidan
-                     L9 jämförelsetext
-   │                   │                   │                   │
-   └───────────────────┴─────────┬─────────┴───────────────────┘
-                                 │
-                        P4 merge, löpande
-                                 │
-                      P5 README  →  P6 inlämning
-```
+
+Diagrammet ritas ut på GitHub. Ser du bara kod läser du filen i en editor
+som inte renderar Mermaid – öppna den på GitHub i stället.
+
+**Fyra arbetsdagar. Inte sju.** Helgen ligger som buffert, inte som planerad
+arbetstid – räkna ändå med att den behövs.
 
 ### Korsberoenden – de enda ställena där någon väntar på någon annan
 
@@ -259,21 +283,6 @@ Laszlo och båda bör vara klara senast onsdag lunch.
 
 **B3 löper genom hela veckan** och väntar inte på någon – Bahador granskar det
 som finns, varje dag, i stället för att spara ihop en lista till fredag.
-
----
-
-## Dag för dag
-
-| Dag | Laszlo | Bahador | Marcus | Peter |
-|---|---|---|---|---|
-| **Tis 4** | L1, L3 påbörjad | B1, B2 | M1, M2 | P1, P2, P3 |
-| **Ons 5** | L3 klar, **L4**, **L5** | B2 klar, B3 | M3, M4 | P4 |
-| **Tors 6** | L6, L2 | B3, B4 | M5 | P4 |
-| **Fre 7** | L7, L8 | B3, B5 | M6, buggar | P4, P5 |
-| **Helg** | buffert – räkna med att den behövs | | | |
-| **Mån 10** | sista genomgång före 17:00 | | | **P6** |
-
-Fyra arbetsdagar. Inte sju.
 
 ---
 

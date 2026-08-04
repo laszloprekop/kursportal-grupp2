@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nordkod – interaktiv wireframe: kursvyn</title>
+
+<!--
+  INTERAKTIV WIREFRAME – KURSVYN
+  ==============================
+  Vad den är: en körbar skiss av beteendet i ADR 0001. Gråskala med flit.
+  Den svarar på "hur känns det när en kurs öppnas", inte på "hur ser det ut".
+  Färg och typografi kommer ur K1 och hör inte hemma här.
+
+  Vad den demonstrerar:
+    1. Kursvyn glider in från höger, huvudvyn skjuts ut åt vänster
+    2. Adressen blir ?kurs=<id> via history.pushState
+    3. Webbläsarens bakåtknapp stänger vyn (popstate)
+    4. Escape stänger vyn
+    5. Laddas sidan med ?kurs=<id> visas vyn direkt, UTAN animation
+    6. Fokus flyttas in i vyn, huvudvyn blir inert, fokus lämnas tillbaka
+       till kortet man klickade på
+    7. Scrollpositionen i huvudvyn överlever en öppning och stängning
+    8. prefers-reduced-motion tar bort rörelsen, inte funktionen
+
+  Den är EN fil med allt inbakat, med flit: den ska gå att öppna och köra utan
+  att någon behöver klona resten. Kursdatan är därför kopierad hit och inte
+  hämtad från data/courses.json.
+
+  FALLGROP: history.pushState fungerar inte via file://. Kör genom en server:
+      python3 -m http.server
+  och öppna http://localhost:8000/docs/prototyp/kursvy-wireframe.html
+  Utan server fungerar allt utom adressen – rutan längst ned säger till.
+
+  Koden här är en referens för L5 och M5, inte den kod som ska in i projektet.
+  Där ligger skalet i index.html (Laszlo) och logiken i js/kursvy.js (Marcus).
+-->
+
+<style>
+  /* ---------------------------------------------------------------
+     Wireframe-paletten. Bara gråskala plus en fokusfärg.
+     Namnen följer INTE tokens.css – det här är inte designen.
+     --------------------------------------------------------------- */
+  :root {
+    --wf-papper:  #ffffff;
+    --wf-yta:     #f4f5f6;
+    --wf-block:   #e2e4e7;
+    --wf-linje:   #c8ccd1;
+    --wf-text:    #2b2f35;
+    --wf-dampad:  #6d747c;
+    --wf-fokus:   #0a58ca;
+
+    --wf-tid-lugn:  420ms;
+    --wf-tid-snabb: 160ms;
+    --wf-ease: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Rörelsen stängs av på två sätt: användarens systeminställning, och
+     knappen i demoraden. Båda pekar på samma variabler. */
+  @media (prefers-reduced-motion: reduce) {
+    :root { --wf-tid-lugn: 0ms; --wf-tid-snabb: 0ms; }
+  }
+  body.utan-rorelse { --wf-tid-lugn: 0ms; --wf-tid-snabb: 0ms; }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    font: 16px/1.55 system-ui, sans-serif;
+    color: var(--wf-text);
+    background: var(--wf-papper);
+    /* Plats för demoraden längst ned */
+    padding-bottom: 148px;
+  }
+
+  /* Fokusmarkering. Syns alltid i den här filen, även när fokus flyttas av
+     kod – annars går poängen med demonstrationen förlorad. */
+  :focus { outline: 3px solid var(--wf-fokus); outline-offset: 3px; }
+
+  .hoppa-till {
+    position: absolute; left: -9999px;
+    background: var(--wf-papper); padding: 12px 16px; z-index: 100;
+  }
+  .hoppa-till:focus { left: 12px; top: 12px; }
+
+  /* ---------------------------------------------------------------
+     Huvudvyn
+     --------------------------------------------------------------- */
+  .sida {
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 0 32px;
+  }
+
+  /* Huvudvyn skjuts ut åt vänster och tonas ned när kursvyn öppnas. */
+  #huvudvy {
+    transition: transform var(--wf-tid-lugn) var(--wf-ease),
+                opacity   var(--wf-tid-lugn) var(--wf-ease);
+  }
+  body.kursvy-oppen #huvudvy {
+    transform: translateX(-12%);
+    opacity: 0.45;
+  }
+
+  .platshallare {
+    background: var(--wf-block);
+    border-radius: 3px;
+    display: block;
+  }
+
+  header.topp {
+    border-bottom: 1px solid var(--wf-linje);
+  }
+  header.topp .rad {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 24px; padding: 20px 0;
+  }
+  .logotyp { font-weight: 700; letter-spacing: 0.04em; }
+  header.topp ul {
+    list-style: none; display: flex; gap: 24px; margin: 0; padding: 0;
+  }
+  header.topp a { color: var(--wf-dampad); text-decoration: none; }
+
+  .hero { padding: 64px 0 48px; display: grid; gap: 16px; max-width: 62ch; }
+  .hero .etikett { color: var(--wf-dampad); font-size: 14px; letter-spacing: 0.08em; text-transform: uppercase; margin: 0; }
+  .hero h1 { font-size: clamp(30px, 5vw, 46px); line-height: 1.12; margin: 0; }
+  .hero p.ingress { color: var(--wf-dampad); margin: 0; }
+  .hero .knappar { display: flex; gap: 12px; margin-top: 8px; }
+
+  .knapp {
+    font: inherit; padding: 11px 18px; border-radius: 4px; cursor: pointer;
+    border: 1px solid var(--wf-linje); background: var(--wf-yta);
+    color: var(--wf-text); text-decoration: none; display: inline-block;
+  }
+  .knapp.fylld { background: var(--wf-text); color: var(--wf-papper); border-color: var(--wf-text); }
+
+  section.block { padding: 40px 0; border-top: 1px solid var(--wf-linje); }
+  section.block > h2 { font-size: 24px; margin: 0 0 20px; }
+
+  /* Filtret – bara antytt. Det är K2:s fråga, inte den här filens. */
+  .filter { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 28px; }
+  .filter .chip {
+    border: 1px solid var(--wf-linje); border-radius: 999px;
+    padding: 7px 14px; font-size: 14px; color: var(--wf-dampad); background: var(--wf-yta);
+  }
+
+  /* Kortrutnätet: 4 kolumner, 2 vid 768, 1 vid 390. Se Figma "Layout – struktur". */
+  #kurslista {
+    list-style: none; margin: 0; padding: 0;
+    display: grid; gap: 20px;
+    grid-template-columns: repeat(4, 1fr);
+  }
+  .kort {
+    border: 1px solid var(--wf-linje); border-radius: 8px;
+    background: var(--wf-papper);
+    padding: 18px; height: 100%;
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .kort .anordnare { font-size: 13px; color: var(--wf-dampad); margin: 0; text-transform: uppercase; letter-spacing: 0.06em; }
+  .kort h3 { font-size: 18px; margin: 0; line-height: 1.25; }
+  .kort .sammanfattning { font-size: 14px; color: var(--wf-dampad); margin: 0; }
+  .kort dl { margin: 0; font-size: 13px; display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; }
+  .kort dt { color: var(--wf-dampad); }
+  .kort dd { margin: 0; }
+  .kort .las-mer { margin-top: auto; padding-top: 8px; }
+
+  .nyheter { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  .nyhet { border: 1px solid var(--wf-linje); border-radius: 8px; padding: 18px; display: grid; gap: 8px; }
+  .nyhet .platshallare.rubrik { height: 14px; width: 70%; }
+  .nyhet .platshallare.rad   { height: 9px; }
+  .nyhet .platshallare.rad.kort { width: 55%; }
+
+  .kontakt { display: grid; gap: 14px; max-width: 520px; }
+  .kontakt .falt { display: grid; gap: 6px; }
+  .kontakt .platshallare.etikett { height: 10px; width: 90px; }
+  .kontakt .platshallare.input   { height: 42px; border: 1px solid var(--wf-linje); background: var(--wf-yta); }
+  .kontakt .platshallare.textyta { height: 104px; border: 1px solid var(--wf-linje); background: var(--wf-yta); }
+
+  footer.botten {
+    border-top: 1px solid var(--wf-linje);
+    padding: 32px 0 48px; color: var(--wf-dampad); font-size: 14px;
+  }
+
+  /* ---------------------------------------------------------------
+     Kursvyn
+     Eget lager över hela fönstret. Ligger UTANFÖR huvudvyn.
+     FALLGROP (arbetsplanen, L5): den får aldrig ligga sida vid sida med
+     huvudvyn i en bred flexrad. Huvudvyn är ~2500 px hög, kursvyn ~900 –
+     raden blir lika hög som den högsta och scrollpositionen hamnar fel.
+     --------------------------------------------------------------- */
+  #kursvy {
+    position: fixed;
+    inset: 0;
+    z-index: 40;
+    background: var(--wf-papper);
+    border-left: 1px solid var(--wf-linje);
+    overflow-y: auto;
+    transform: translateX(100%);
+    transition: transform var(--wf-tid-lugn) var(--wf-ease);
+  }
+  #kursvy[hidden] { display: none; }
+  #kursvy.inne { transform: translateX(0); }
+
+  /* Öppnas vyn direkt vid sidladdning ska den inte glida in. Klassen sätts
+     före första målningen och tas bort efteråt. */
+  #kursvy.utan-animation { transition: none; }
+
+  .kursvy-inner { max-width: 860px; margin: 0 auto; padding: 28px 32px 80px; }
+  .kursvy-topp { padding-top: 4px; padding-bottom: 24px; }
+  #kursvy h2 { font-size: clamp(26px, 4vw, 38px); margin: 12px 0 8px; line-height: 1.14; }
+  #kursvy h2:focus { outline: 3px solid var(--wf-fokus); outline-offset: 6px; }
+  #kursvy .anordnare { color: var(--wf-dampad); font-size: 14px; margin: 0; text-transform: uppercase; letter-spacing: 0.06em; }
+  #kursvy .sammanfattning { font-size: 19px; color: var(--wf-dampad); margin: 0 0 28px; }
+
+  #kursvy dl {
+    display: grid; grid-template-columns: repeat(5, 1fr);
+    gap: 4px 16px; margin: 0 0 32px;
+    border-top: 1px solid var(--wf-linje);
+    border-bottom: 1px solid var(--wf-linje);
+    padding: 18px 0;
+  }
+  #kursvy dt { color: var(--wf-dampad); font-size: 13px; grid-row: 1; text-transform: uppercase; letter-spacing: 0.05em; }
+  #kursvy dd { margin: 0; grid-row: 2; font-size: 16px; }
+
+  #kursvy .beskrivning p { margin: 0 0 16px; max-width: 68ch; }
+
+  /* ---------------------------------------------------------------
+     Demoraden. Hör INTE till produkten – den finns för att man ska kunna
+     se mekaniken på en projektor.
+     --------------------------------------------------------------- */
+  .demo {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 90;
+    background: #1c1f24; color: #e8eaed;
+    border-top: 3px solid #3a3f47;
+    font: 13px/1.5 ui-monospace, monospace;
+  }
+  .demo-rad { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; padding: 10px 16px; }
+  .demo-titel { color: #9aa2ab; text-transform: uppercase; letter-spacing: 0.1em; font-size: 11px; }
+  .demo button {
+    font: inherit; background: #2b3038; color: #e8eaed;
+    border: 1px solid #464c55; border-radius: 4px; padding: 6px 10px; cursor: pointer;
+  }
+  .demo button[aria-pressed="true"] { background: #e8eaed; color: #1c1f24; }
+  .demo .adress {
+    flex: 1 1 260px; min-width: 200px;
+    background: #101317; border: 1px solid #3a3f47; border-radius: 999px;
+    padding: 6px 14px; color: #9ad1a0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .demo .logg {
+    max-height: 84px; overflow-y: auto; margin: 0;
+    padding: 8px 16px 12px; border-top: 1px solid #3a3f47; color: #b9c0c8;
+  }
+  .demo .logg p { margin: 0 0 2px; }
+  .demo .logg .ny { color: #ffffff; }
+  .demo .varning { color: #ffcf7a; padding: 8px 16px; border-top: 1px solid #3a3f47; margin: 0; }
+  body.demo-hopfalld .demo .logg,
+  body.demo-hopfalld .demo .varning { display: none; }
+  body.demo-hopfalld { padding-bottom: 60px; }
+
+  /* ---------------------------------------------------------------
+     Brytpunkter. Samma två som resten av projektet: 768 och 390.
+     --------------------------------------------------------------- */
+  @media (max-width: 1199px) {
+    #kurslista { grid-template-columns: repeat(2, 1fr); }
+    .nyheter { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 767px) {
+    .sida { padding: 0 20px; }
+    #kurslista { grid-template-columns: 1fr; }
+    .nyheter { grid-template-columns: 1fr; }
+    header.topp ul { gap: 14px; font-size: 14px; }
+    .kursvy-inner { padding: 20px 20px 80px; }
+    #kursvy dl { grid-template-columns: 1fr 1fr; }
+    #kursvy dt { grid-row: auto; }
+    #kursvy dd { grid-row: auto; margin-bottom: 10px; }
+    /* På smal skärm täcker vyn hela bredden och huvudvyn syns inte alls. */
+    body.kursvy-oppen #huvudvy { transform: translateX(-30%); }
+  }
+</style>
+</head>
+
+<body>
+
+<a class="hoppa-till" href="#huvudvy">Hoppa till innehållet</a>
+
+<!-- =====================================================================
+     HUVUDVYN
+     Gråskaleskiss. Det enda som är på riktigt här är kurskorten, eftersom
+     det är de som öppnar kursvyn.
+     ===================================================================== -->
+<div id="huvudvy">
+
+  <header class="topp">
+    <div class="sida rad">
+      <span class="logotyp">NORDKOD</span>
+      <nav aria-label="Huvudmeny">
+        <ul>
+          <li><a href="#kurser">Kurser</a></li>
+          <li><a href="#nyheter">Nyheter</a></li>
+          <li><a href="#kontakt">Kontakt</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main class="sida">
+
+    <section class="hero" aria-labelledby="hero-rubrik">
+      <p class="etikett">Arbetsmarknadsutbildning · Norrbotten</p>
+      <h1 id="hero-rubrik">Bli fullstackutvecklare i norra Sverige</h1>
+      <p class="ingress">
+        Elva månader från påbyggnadskurs till arbetsplats. Du läser hos Lexicon och
+        Luleå tekniska universitet, och avslutar med praktik hos ett företag i norr.
+      </p>
+      <div class="knappar">
+        <a class="knapp fylld" href="#kurser">Se kurser</a>
+        <a class="knapp" href="#kontakt">Kontakta oss</a>
+      </div>
+    </section>
+
+    <section class="block" id="kurser" aria-labelledby="kurser-rubrik">
+      <h2 id="kurser-rubrik">Kurser i programmet</h2>
+
+      <!-- Filtret är bara antytt. Enkelval eller flerval är K2:s fråga. -->
+      <div class="filter" aria-hidden="true">
+        <span class="chip">Anordnare ▾</span>
+        <span class="chip">Nivå ▾</span>
+        <span class="chip">Kategori ▾</span>
+        <span class="chip">Rensa filter</span>
+      </div>
+
+      <ul id="kurslista"></ul>
+    </section>
+
+    <section class="block" id="nyheter" aria-labelledby="nyheter-rubrik">
+      <h2 id="nyheter-rubrik">Nyheter</h2>
+      <div class="nyheter">
+        <article class="nyhet"><span class="platshallare rubrik"></span><span class="platshallare rad"></span><span class="platshallare rad"></span><span class="platshallare rad kort"></span></article>
+        <article class="nyhet"><span class="platshallare rubrik"></span><span class="platshallare rad"></span><span class="platshallare rad"></span><span class="platshallare rad kort"></span></article>
+        <article class="nyhet"><span class="platshallare rubrik"></span><span class="platshallare rad"></span><span class="platshallare rad"></span><span class="platshallare rad kort"></span></article>
+      </div>
+    </section>
+
+    <section class="block" id="kontakt" aria-labelledby="kontakt-rubrik">
+      <h2 id="kontakt-rubrik">Kontakta oss</h2>
+      <div class="kontakt" aria-hidden="true">
+        <div class="falt"><span class="platshallare etikett"></span><span class="platshallare input"></span></div>
+        <div class="falt"><span class="platshallare etikett"></span><span class="platshallare input"></span></div>
+        <div class="falt"><span class="platshallare etikett"></span><span class="platshallare textyta"></span></div>
+        <span class="knapp fylld" style="width:max-content">Skicka meddelande</span>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="botten">
+    <div class="sida">
+      <p>Nordkod · Studentprojekt, Lexicon frontendkurs 2026. Nordkod är ett påhittat namn.</p>
+    </div>
+  </footer>
+
+</div><!-- /#huvudvy -->
+
+<!-- =====================================================================
+     KURSVYN
+     Syskon till huvudvyn, aldrig barn till den. Eget lager över hela
+     fönstret. Dold tills en kurs öppnas.
+     ===================================================================== -->
+<section id="kursvy" aria-labelledby="kursvy-rubrik" hidden>
+  <div class="kursvy-inner">
+    <div class="kursvy-topp">
+      <button type="button" class="knapp" id="kursvy-tillbaka">← Tillbaka till kurserna</button>
+    </div>
+    <article>
+      <p class="anordnare" data-falt="provider"></p>
+      <!-- tabindex="-1" så att fokus kan flyttas hit av kod, men rubriken
+           inte hamnar i tabbordningen. -->
+      <h2 id="kursvy-rubrik" data-falt="title" tabindex="-1"></h2>
+      <p class="sammanfattning" data-falt="summary"></p>
+      <dl>
+        <dt>Längd</dt><dt>Start</dt><dt>Slut</dt><dt>Nivå</dt><dt>Avgift</dt>
+        <dd data-falt="duration"></dd>
+        <dd data-falt="startDate"></dd>
+        <dd data-falt="endDate"></dd>
+        <dd data-falt="level"></dd>
+        <dd data-falt="price"></dd>
+      </dl>
+      <div class="beskrivning" data-falt="description"></div>
+    </article>
+  </div>
+</section>
+
+<!-- =====================================================================
+     DEMORADEN – hör inte till produkten
+     ===================================================================== -->
+<div class="demo">
+  <div class="demo-rad">
+    <span class="demo-titel">Wireframe</span>
+    <span class="adress" id="demo-adress">…</span>
+    <button type="button" id="demo-rorelse" aria-pressed="false">Rörelse: på</button>
+    <button type="button" id="demo-bakat">Bakåtknappen</button>
+    <button type="button" id="demo-djuplank">Ladda om med ?kurs=</button>
+    <button type="button" id="demo-falla" aria-pressed="false">Dölj logg</button>
+  </div>
+  <p class="varning" id="demo-varning" hidden></p>
+  <div class="logg" id="demo-logg" aria-live="off"></div>
+</div>
+
+<script>
+/* =====================================================================
+   Kursdata – kopia av data/courses.json så att filen fungerar ensam.
+   I det riktiga bygget hämtas den med fetch (M1).
+   ===================================================================== */
+const KURSER = [
+  {
+    id: "test-och-kartlaggning",
+    title: "Test och kartläggning",
+    summary: "Två veckor där vi kartlägger dina förkunskaper och lägger upp din studieplan.",
+    description: [
+      "Utbildningen inleds med två veckors test och kartläggning. Du får visa vad du redan kan inom programmering, och tillsammans med en handledare lägger ni upp en studieplan för resten av programmet.",
+      "Perioden är obligatorisk för alla deltagare och avgör inte om du får gå vidare – den avgör hur din väg genom programmet ser ut."
+    ],
+    provider: "Lexicon", category: "Introduktion", level: "Alla",
+    startDate: "2026-04-13", endDate: "2026-04-24",
+    duration: { value: 2, unit: "veckor" }, price: 0, program: true
+  },
+  {
+    id: "it-pabyggnad-mot-fullstack",
+    title: "IT-påbyggnad mot fullstack",
+    summary: "Arton veckor med webbutveckling, versionshantering och arbetssätt i team.",
+    description: [
+      "Programmets tyngsta del. Du bygger webbapplikationer från grunden: semantisk HTML, CSS med Flexbox och Grid, JavaScript och TypeScript, och de verktyg som används i verkliga projekt.",
+      "Undervisningen varvar genomgångar med eget arbete och grupparbeten. Du arbetar i Git från första veckan.",
+      "Delen ges av Lexicon och löper över sommaren med ett uppehåll i juli."
+    ],
+    provider: "Lexicon", category: "Fullstack", level: "Påbyggnad",
+    startDate: "2026-04-27", endDate: "2026-09-16",
+    duration: { value: 18, unit: "veckor" }, price: 0, program: true
+  },
+  {
+    id: "teoristudier-ltu",
+    title: "Teoristudier",
+    summary: "Tjugoen veckor vid Luleå tekniska universitet med fördjupning i systemutveckling.",
+    description: [
+      "Den akademiska delen av programmet, som ges av Luleå tekniska universitet. Här flyttas fokus från hantverket till principerna bakom: datastrukturer, systemdesign, databaser och metodik.",
+      "Studierna sker på distans med schemalagda träffar. Perioden löper genom vintern, från september till februari."
+    ],
+    provider: "Luleå tekniska universitet", category: "Fullstack", level: "Påbyggnad",
+    startDate: "2026-09-17", endDate: "2027-02-17",
+    duration: { value: 21, unit: "veckor" }, price: 0, program: true
+  },
+  {
+    id: "arbetsplatsforlagt-larande",
+    title: "Arbetsplatsförlagt lärande",
+    summary: "Tjugonio dagar hos ett företag i Norrbotten eller Västerbotten.",
+    description: [
+      "Programmet avslutas med praktik. Du arbetar hos ett företag i regionen och tar med dig det du lärt dig in i ett riktigt utvecklingsteam.",
+      "Platserna förmedlas av utbildningsanordnaren. Flera deltagare har fått anställning direkt efter perioden."
+    ],
+    provider: "Praktikplats", category: "Praktik", level: "Påbyggnad",
+    startDate: "2027-02-18", endDate: "2027-03-18",
+    duration: { value: 29, unit: "dagar" }, price: 0, program: true
+  },
+  {
+    id: "responsiv-design-med-css",
+    title: "Responsiv design med CSS",
+    summary: "Sex veckor om layout som håller från 390 till 1440 pixlar.",
+    description: [
+      "En kurs för dig som kan HTML men vill bli säker på layout. Vi arbetar med Flexbox, Grid, brytpunkter och relativa enheter, och du bygger om samma sida för tre skärmstorlekar.",
+      "Kursen ges på kvällstid och kräver inga förkunskaper i JavaScript."
+    ],
+    provider: "Nordkod", category: "Frontend", level: "Nybörjare",
+    startDate: "2026-09-07", endDate: "2026-10-16",
+    duration: { value: 6, unit: "veckor" }, price: 9900, program: false
+  },
+  {
+    id: "javascript-for-webb",
+    title: "JavaScript för webb",
+    summary: "Åtta veckor om att hämta data, hantera händelser och bygga interaktion.",
+    description: [
+      "Du lär dig arbeta med DOM:en, lyssna på händelser och hämta data med fetch och async/await. Kursen avslutas med ett eget projekt där du bygger en sida som läser sitt innehåll från ett API.",
+      "Förkunskaper: HTML och CSS på grundnivå."
+    ],
+    provider: "Nordkod", category: "Frontend", level: "Fortsättning",
+    startDate: "2026-10-05", endDate: "2026-11-27",
+    duration: { value: 8, unit: "veckor" }, price: 12900, program: false
+  }
+];
+
+/* =====================================================================
+   Formatering. Grov kopia av det M2 ska göra i js/kursdata.js.
+   Datan innehåller aldrig formaterad text – därför sker det här.
+   ===================================================================== */
+const visaDatum = iso =>
+  new Date(iso + "T00:00:00")
+    .toLocaleDateString("sv-SE", { day: "numeric", month: "short", year: "numeric" })
+    .replace(".", "");   // sv-SE ger "17 sep. 2026" – kontraktet säger "17 sep 2026"
+
+const visaPris = kronor =>
+  kronor === 0 ? "Kostnadsfri" : kronor.toLocaleString("sv-SE") + " kr";
+
+const visaLangd = d => d.value + " " + d.unit;
+
+/* =====================================================================
+   Kurslistan
+   ===================================================================== */
+const listan = document.getElementById("kurslista");
+
+KURSER.forEach(kurs => {
+  const li = document.createElement("li");
+  li.innerHTML = `
+    <article class="kort" data-kurs-id="${kurs.id}">
+      <p class="anordnare">${kurs.provider}</p>
+      <h3>${kurs.title}</h3>
+      <p class="sammanfattning">${kurs.summary}</p>
+      <dl>
+        <dt>Längd</dt><dd>${visaLangd(kurs.duration)}</dd>
+        <dt>Start</dt><dd>${visaDatum(kurs.startDate)}</dd>
+        <dt>Nivå</dt><dd>${kurs.level}</dd>
+        <dt>Avgift</dt><dd>${visaPris(kurs.price)}</dd>
+      </dl>
+      <p class="las-mer">
+        <a class="knapp" href="?kurs=${kurs.id}" data-oppna="${kurs.id}">Läs mer</a>
+      </p>
+    </article>`;
+  listan.append(li);
+});
+
+/* =====================================================================
+   Kursvyn – öppna, stänga, adress, fokus
+   Det här är kärnan i demonstrationen och referensen för L5 + M5.
+   ===================================================================== */
+const kroppen   = document.body;
+const vyn       = document.getElementById("kursvy");
+const huvudvyn  = document.getElementById("huvudvy");
+const tillbaka  = document.getElementById("kursvy-tillbaka");
+const rubriken  = document.getElementById("kursvy-rubrik");
+
+let oppenKurs      = null;  // id på den kurs som visas, annars null
+let scrollPosition = 0;     // huvudvyns scrollposition medan vyn är öppen
+let fokusTillbakaTill = null; // elementet som ska få fokus när vyn stängs
+let harPushat      = false; // sant om VI la till posten i historiken
+
+function fyllVyn(kurs) {
+  const satt = (falt, varde) => {
+    const el = vyn.querySelector(`[data-falt="${falt}"]`);
+    if (el) el.textContent = varde;   // en mall får sakna en krok
+  };
+  satt("provider",  kurs.provider);
+  satt("title",     kurs.title);
+  satt("summary",   kurs.summary);
+  satt("duration",  visaLangd(kurs.duration));
+  satt("startDate", visaDatum(kurs.startDate));
+  satt("endDate",   visaDatum(kurs.endDate));
+  satt("level",     kurs.level);
+  satt("price",     visaPris(kurs.price));
+
+  const beskrivning = vyn.querySelector('[data-falt="description"]');
+  beskrivning.replaceChildren(...kurs.description.map(stycke => {
+    const p = document.createElement("p");
+    p.textContent = stycke;
+    return p;
+  }));
+}
+
+function oppnaKursvy(id, { animera = true, uppdateraAdress = true } = {}) {
+  const kurs = KURSER.find(k => k.id === id);
+  if (!kurs || oppenKurs === id) return;
+
+  fyllVyn(kurs);
+  oppenKurs = id;
+  scrollPosition = window.scrollY;
+
+  // 1. Adressen. Kursvyn är en vy, inte en ruta – därför en egen adress.
+  if (uppdateraAdress) {
+    harPushat = skrivAdress("push", id);
+  }
+
+  // 2. Visa lagret. hidden bort FÖRST, sedan en påtvingad omritning, annars
+  //    hinner webbläsaren aldrig se utgångsläget och inglidningen uteblir.
+  vyn.hidden = false;
+  if (!animera) vyn.classList.add("utan-animation");
+  void vyn.offsetWidth;                 // tvingar fram en omritning
+  vyn.classList.add("inne");
+  kroppen.classList.add("kursvy-oppen");
+  if (!animera) requestAnimationFrame(() => vyn.classList.remove("utan-animation"));
+
+  // 3. Lås huvudvyns scroll utan att tappa positionen.
+  kroppen.style.overflow = "hidden";
+
+  // 4. Huvudvyn ur tabbordningen. inert tar bort både fokus och
+  //    skärmläsarens åtkomst i ett svep.
+  huvudvyn.inert = true;
+
+  // 5. Fokus in i vyn, på rubriken – då läses kursens namn upp.
+  rubriken.focus();
+
+  logga(`öppnar “${kurs.title}”`);
+  logga(uppdateraAdress ? `pushState → ?kurs=${id}` : "öppnad direkt vid sidladdning, utan animation");
+  logga("huvudvyn: inert = true");
+  logga("fokus → kursvyns rubrik");
+  ritaAdress();
+}
+
+function stangKursvy({ animera = true, uppdateraAdress = true } = {}) {
+  if (!oppenKurs) return;
+  const stangdKurs = oppenKurs;
+  oppenKurs = null;
+
+  if (uppdateraAdress) skrivAdress("replace", null);
+
+  if (!animera) vyn.classList.add("utan-animation");
+  vyn.classList.remove("inne");
+  kroppen.classList.remove("kursvy-oppen");
+
+  // Huvudvyn tillbaka i tabbordningen INNAN fokus flyttas dit.
+  huvudvyn.inert = false;
+  kroppen.style.overflow = "";
+  window.scrollTo({ top: scrollPosition, behavior: "auto" });
+
+  // Fokus tillbaka till kortet man kom ifrån. Utan det landar fokus på
+  // <body> och tangentbordsanvändaren tappar sin plats i listan.
+  const mal = fokusTillbakaTill
+    || document.querySelector(`[data-oppna="${stangdKurs}"]`);
+  if (mal) mal.focus({ preventScroll: true });
+  fokusTillbakaTill = null;
+
+  // Först när utglidningen är klar får lagret döljas helt.
+  const dolj = () => { if (!oppenKurs) vyn.hidden = true; vyn.classList.remove("utan-animation"); };
+  if (animera) setTimeout(dolj, rorelseAv() ? 0 : 440);
+  else dolj();
+
+  logga("stänger kursvyn");
+  logga("huvudvyn: inert = false");
+  logga(`fokus → tillbaka till kortet “${(KURSER.find(k => k.id === stangdKurs) || {}).title}”`);
+  logga(`scroll återställd till ${Math.round(scrollPosition)} px`);
+  ritaAdress();
+}
+
+/** Läser ?kurs= ur adressen. Returnerar id eller null. */
+function kursIdFranAdress() {
+  return new URLSearchParams(location.search).get("kurs");
+}
+
+/** Skriver adressen. Returnerar true om det gick (misslyckas på file://). */
+function skrivAdress(lage, id) {
+  const url = id ? `?kurs=${id}` : location.pathname;
+  try {
+    if (lage === "push") history.pushState({ kurs: id }, "", url);
+    else                 history.replaceState({ kurs: id }, "", url);
+    return true;
+  } catch (fel) {
+    varna("Adressen kan inte ändras via file:// – kör genom en server: python3 -m http.server");
+    return false;
+  }
+}
+
+/* Bakåtknappen. Samma stängning som knappen i vyn, men utan att röra
+   historiken en gång till – webbläsaren har redan gjort det. */
+window.addEventListener("popstate", handelse => {
+  const id = (handelse.state && handelse.state.kurs) || kursIdFranAdress();
+  logga("popstate ← webbläsarens bakåt- eller framåtknapp");
+  if (id) oppnaKursvy(id, { animera: true, uppdateraAdress: false });
+  else    stangKursvy({ animera: true, uppdateraAdress: false });
+});
+
+/* Knappen i vyn. Går via historiken när vi själva har lagt dit posten, så
+   att adressen och bakåtknappen håller ihop. Öppnades vyn via en delad
+   länk finns ingen post att gå tillbaka till – då stänger vi direkt. */
+tillbaka.addEventListener("click", () => {
+  if (harPushat) { harPushat = false; history.back(); }
+  else stangKursvy();
+});
+
+/* Escape stänger. Samma väg som knappen. */
+document.addEventListener("keydown", handelse => {
+  if (handelse.key === "Escape" && oppenKurs) {
+    logga("Escape");
+    tillbaka.click();
+  }
+});
+
+/* Klick på "Läs mer". Länken har en riktig href, så den går att öppna i ny
+   flik och att kopiera – JavaScript tar bara över det vanliga klicket. */
+listan.addEventListener("click", handelse => {
+  const lank = handelse.target.closest("[data-oppna]");
+  if (!lank) return;
+  if (handelse.metaKey || handelse.ctrlKey || handelse.shiftKey) return; // ny flik
+  handelse.preventDefault();
+  fokusTillbakaTill = lank;
+  oppnaKursvy(lank.dataset.oppna);
+});
+
+/* =====================================================================
+   Demoradens funktioner. Hör inte till produkten.
+   ===================================================================== */
+const loggen  = document.getElementById("demo-logg");
+const adressen = document.getElementById("demo-adress");
+const varningen = document.getElementById("demo-varning");
+
+function logga(text) {
+  const p = document.createElement("p");
+  p.textContent = "› " + text;
+  p.className = "ny";
+  const forra = loggen.lastElementChild;
+  if (forra) forra.classList.remove("ny");
+  loggen.append(p);
+  loggen.scrollTop = loggen.scrollHeight;
+}
+
+function ritaAdress() {
+  adressen.textContent = location.pathname.split("/").pop() + location.search;
+}
+
+function varna(text) {
+  varningen.textContent = "⚠ " + text;
+  varningen.hidden = false;
+}
+
+function rorelseAv() {
+  return kroppen.classList.contains("utan-rorelse")
+      || window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+
+document.getElementById("demo-rorelse").addEventListener("click", handelse => {
+  const av = kroppen.classList.toggle("utan-rorelse");
+  handelse.currentTarget.setAttribute("aria-pressed", String(av));
+  handelse.currentTarget.textContent = av ? "Rörelse: av" : "Rörelse: på";
+  logga(av ? "prefers-reduced-motion simuleras – vyn byts utan rörelse" : "rörelse på igen");
+});
+
+document.getElementById("demo-bakat").addEventListener("click", () => history.back());
+
+document.getElementById("demo-djuplank").addEventListener("click", () => {
+  const id = oppenKurs || KURSER[2].id;
+  location.href = location.pathname + "?kurs=" + id;
+});
+
+document.getElementById("demo-falla").addEventListener("click", handelse => {
+  const hopfalld = kroppen.classList.toggle("demo-hopfalld");
+  handelse.currentTarget.setAttribute("aria-pressed", String(hopfalld));
+  handelse.currentTarget.textContent = hopfalld ? "Visa logg" : "Dölj logg";
+});
+
+/* =====================================================================
+   Start. Ligger sist med flit: allt härifrån använder både kursvyns
+   funktioner och demoradens, och en const går inte att läsa innan raden
+   som skapar den har körts.
+
+   Vid sidladdning: ?kurs=<id> visar vyn direkt, utan animation.
+   ===================================================================== */
+logga("wireframe laddad – klicka “Läs mer” på ett kort");
+
+(function vidStart() {
+  const id = kursIdFranAdress();
+  if (id && KURSER.some(k => k.id === id)) {
+    oppnaKursvy(id, { animera: false, uppdateraAdress: false });
+    harPushat = false;   // posten i historiken är inte vår – knappen stänger direkt
+  }
+  ritaAdress();
+  if (location.protocol === "file:") {
+    varna("Öppnad via file:// – adressen och bakåtknappen fungerar inte. Kör: python3 -m http.server");
+  }
+})();
+</script>
+
+</body>
+</html>
